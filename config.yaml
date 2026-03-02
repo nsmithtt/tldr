@@ -23,3 +23,4 @@ slack:
 summarize:
   model: "claude-sonnet-4-20250514"
   lookback_days: 7
+  slack_channel: "#tt-forge-tldr"

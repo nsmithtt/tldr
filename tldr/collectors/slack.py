@@ -157,6 +157,20 @@ def collect_thread(channel_name, channel_id, token, thread_ts, parent_title):
     return count
 
 
+def post_message(channel, text, token=None):
+    """Post a message to a Slack channel via chat.postMessage."""
+    if token is None:
+        token = get_slack_token()
+    url = "https://slack.com/api/chat.postMessage"
+    headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
+    resp = requests.post(url, headers=headers, json={"channel": channel, "text": text})
+    resp.raise_for_status()
+    data = resp.json()
+    if not data.get("ok"):
+        raise RuntimeError(f"Slack API error (chat.postMessage): {data.get('error', data)}")
+    return data
+
+
 def collect():
     config = load_config()
     slack_config = config.get("slack", {})

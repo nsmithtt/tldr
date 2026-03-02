@@ -66,4 +66,15 @@ def summarize(days=None):
         ],
     )
 
-    print(response.content[0].text)
+    digest = response.content[0].text
+    print(digest)
+
+    slack_channel = summarize_config.get("slack_channel")
+    if slack_channel:
+        from tldr.collectors.slack import post_message, get_slack_token
+        try:
+            token = get_slack_token()
+            post_message(slack_channel, digest, token)
+            print(f"\nPosted digest to Slack channel {slack_channel}")
+        except Exception as e:
+            print(f"\nFailed to post to Slack: {e}")
