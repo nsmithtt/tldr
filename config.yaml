@@ -10,6 +10,16 @@ github:
     - reviews
     - issues
 
+slack:
+  channels:
+    - "tt-forge"
+    - "forge-fe"
+    - "tt-forge-integration"
+    - "tt-lang-developers"
+    - "tt-xla"
+    - "tt-mlir-d2m"
+    - "tt-mlir-llvm-integration"
+
 summarize:
   model: "claude-sonnet-4-20250514"
   lookback_days: 7

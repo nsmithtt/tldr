@@ -11,7 +11,7 @@ def main():
 
     # collect
     collect_parser = subparsers.add_parser("collect", help="Collect events from a source")
-    collect_parser.add_argument("source", choices=["github"], help="Source to collect from")
+    collect_parser.add_argument("source", choices=["github", "slack"], help="Source to collect from")
 
     # summarize
     summarize_parser = subparsers.add_parser("summarize", help="Generate a weekly digest")
@@ -22,6 +22,9 @@ def main():
     if args.command == "collect":
         if args.source == "github":
             from tldr.collectors.github import collect
+            collect()
+        elif args.source == "slack":
+            from tldr.collectors.slack import collect
             collect()
     elif args.command == "summarize":
         from tldr.summarize import summarize
