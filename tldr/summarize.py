@@ -1,0 +1,69 @@
+import yaml
+import os
+from datetime import datetime, timezone, timedelta
+from collections import defaultdict
+
+import anthropic
+
+from tldr import db
+
+
+CONFIG_PATH = os.path.join(os.path.dirname(__file__), "..", "config.yaml")
+
+
+def load_config():
+    with open(CONFIG_PATH) as f:
+        return yaml.safe_load(f)
+
+
+def format_events_for_prompt(events):
+    by_project = defaultdict(lambda: defaultdict(list))
+    for e in events:
+        by_project[e["project"]][e["event_type"]].append(e)
+
+    lines = []
+    for project, types in sorted(by_project.items()):
+        lines.append(f"## {project}")
+        for etype, items in sorted(types.items()):
+            lines.append(f"\n### {etype} ({len(items)})")
+            for item in items:
+                line = f"- [{item['timestamp'][:10]}] {item['author']}: {item['title']}"
+                if item.get("url"):
+                    line += f"  ({item['url']})"
+                lines.append(line)
+        lines.append("")
+    return "\n".join(lines)
+
+
+def summarize(days=None):
+    config = load_config()
+    summarize_config = config.get("summarize", {})
+    model = summarize_config.get("model", "claude-sonnet-4-20250514")
+    lookback = days or summarize_config.get("lookback_days", 7)
+
+    db.init_db()
+    since = (datetime.now(timezone.utc) - timedelta(days=lookback)).isoformat()
+    events = db.get_events(since)
+
+    if not events:
+        print("No events found in the last {} days.".format(lookback))
+        return
+
+    formatted = format_events_for_prompt(events)
+    print(f"Summarizing {len(events)} events from the last {lookback} days...\n")
+
+    if not os.environ.get("ANTHROPIC_API_KEY"):
+        print("Error: ANTHROPIC_API_KEY not set. Add it to .env or export it.")
+        return
+
+    client = anthropic.Anthropic()
+    response = client.messages.create(
+        model=model,
+        max_tokens=1024,
+        system="You are a concise technical writer. Summarize the following week of development activity. Highlight key changes, decisions, and patterns. Group by project.",
+        messages=[
+            {"role": "user", "content": f"Here is the development activity:\n\n{formatted}"}
+        ],
+    )
+
+    print(response.content[0].text)

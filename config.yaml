@@ -1,0 +1,15 @@
+github:
+  repos:
+    - "tenstorrent/tt-mlir"
+    - "tenstorrent/tt-xla"
+    - "tenstorrent/tt-forge-onnx"
+    - "tenstorrent/tt-forge"
+  event_types:
+    - commits
+    - pull_requests
+    - reviews
+    - issues
+
+summarize:
+  model: "claude-sonnet-4-20250514"
+  lookback_days: 7
