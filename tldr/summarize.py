@@ -60,7 +60,19 @@ def summarize(days=None):
     response = client.messages.create(
         model=model,
         max_tokens=1024,
-        system="You are a concise technical writer. Summarize the following week of development activity. Highlight key changes, decisions, and patterns. Group by project.",
+        system="\n".join([
+            "You are a concise technical writer. Summarize the following week of development activity.",
+            "Highlight key changes, decisions, and patterns. Group by project.",
+            "",
+            "Format the output using Slack mrkdwn syntax:",
+            "- Use *bold* for section headers (not markdown ## or **).",
+            "- Use bullet points with \u2022 for list items.",
+            "- Use _italic_ for emphasis.",
+            "- Use `code` for inline code references.",
+            "- Use <url|link text> for links.",
+            "- Separate sections with a blank line.",
+            "- Do not use markdown headers, tables, or numbered lists.",
+        ]),
         messages=[
             {"role": "user", "content": f"Here is the development activity:\n\n{formatted}"}
         ],
