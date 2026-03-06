@@ -16,6 +16,7 @@ def main():
     # summarize
     summarize_parser = subparsers.add_parser("summarize", help="Generate a weekly digest")
     summarize_parser.add_argument("--days", type=int, default=7, help="Number of days to look back")
+    summarize_parser.add_argument("--no-post", action="store_true", help="Do not post to Slack")
 
     args = parser.parse_args()
 
@@ -30,7 +31,7 @@ def main():
                 collect_slack()
     elif args.command == "summarize":
         from tldr.summarize import summarize
-        summarize(days=args.days)
+        summarize(post=not args.no_post, days=args.days)
     else:
         parser.print_help()
         sys.exit(1)

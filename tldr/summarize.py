@@ -35,7 +35,7 @@ def format_events_for_prompt(events):
     return "\n".join(lines)
 
 
-def summarize(days=None):
+def summarize(post=False, days=None):
     config = load_config()
     summarize_config = config.get("summarize", {})
     model = summarize_config.get("model", "claude-sonnet-4-20250514")
@@ -60,19 +60,26 @@ def summarize(days=None):
     response = client.messages.create(
         model=model,
         max_tokens=1024,
-        system="\n".join([
-            "You are a concise technical writer. Summarize the following week of development activity.",
-            "Highlight key changes, decisions, and patterns. Group by project.",
-            "",
-            "Format the output using Slack mrkdwn syntax:",
-            "- Use *bold* for section headers (not markdown ## or **).",
-            "- Use bullet points with \u2022 for list items.",
-            "- Use _italic_ for emphasis.",
-            "- Use `code` for inline code references.",
-            "- Use <url|link text> for links.",
-            "- Separate sections with a blank line.",
-            "- Do not use markdown headers, tables, or numbered lists.",
-        ]),
+        system="""
+You are a concise technical writer. Summarize the following week of development activity.
+Highlight key changes, decisions, and patterns. Group by project.
+
+Additionally create subsections for each project:
+- Git commits and slack activity as development that has completed.
+- PRs as upcoming changes to be aware of.
+- Top issues as blockers or areas to raise attention.
+
+Format the output using Slack mrkdwn syntax:
+- Use *bold* and _italic_ for top level header including the date range.
+- Use `code` for project section headers (not markdown ## or **).
+- Use *bold* for subsection headers (not markdown ## or **).
+- Use bullet points with \u2022 for list items.
+- Use _italic_ for emphasis.
+- Use `code` for inline code references.
+- Use <url|link text> for links.
+- Separate sections with a blank line.
+- Do not use markdown headers, tables, or numbered lists.
+        """,
         messages=[
             {"role": "user", "content": f"Here is the development activity:\n\n{formatted}"}
         ],
@@ -82,7 +89,7 @@ def summarize(days=None):
     print(digest)
 
     slack_channel = summarize_config.get("slack_channel")
-    if slack_channel:
+    if slack_channel and post:
         from tldr.collectors.slack import post_message, get_slack_token
         try:
             token = get_slack_token()
